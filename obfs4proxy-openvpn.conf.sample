@@ -1,0 +1,44 @@
+#
+# Make sure to read the manual before adjusting these settings
+# If there are multiple enteries of the same kind, the last one wins the race
+
+
+# Mode of operation - client/server
+MODE				client
+
+
+# Only obfs4 is supported
+TRANSPORT			obfs4
+IAT_MODE			0
+
+
+### Applies to client mode only
+CLIENT_REMOTE_CERT		3v5WYAEmHHcltDCxHlCo4+g3vEN0E4Aqnu7w/Pt3R4kl42V/5ob2+EhjhvFx3/IoE+DsTA
+#CLIENT_REMOTE_NODE_ID		a6573dd465bc3f1054182b7eaaa1619fde54cbf8
+#CLIENT_REMOTE_PUBLIC_KEY	800195bc31d8f37634f6b1d2e05bc793105e0b5341822a51d23f6eb90d6e3843
+#CLIENT_UPSTREAM_PROXY		socks5://tor:test1234@129.0.0.1:8040
+
+
+### Applies to server mode only
+SERVER_OBFS4_BIND_ADDR		0.0.0.0
+SERVER_OBFS4_BIND_PORT		1516
+SERVER_OPENVPN_BIND_ADDR	127.0.0.1
+SERVER_OPENVPN_BIND_PORT	1515
+
+
+### obfs4proxy settings
+#
+# Absuloute path only. No funny character is allowed.
+# Don't change it unless you know what you're doing
+OBFS4PROXY_WORKING_DIR		/var/lib/obfs4proxy-openvpn
+OBFS4PROXY_UID			obfs4-ovpn
+OBFS4PROXY_GID			obfs4-ovpn
+OBFS4PROXY_LOG_LEVEL		debug
+OBFS4PROXY_LOG_IP		true
+
+# In Debian based distros, better not to use .conf extension if you're going
+# to place it in default openvpn conf folders.
+# This is to avoid accidental auto-startup by openvpn systemd unit
+### OpenVPN config file
+OPENVPN_CONFIG_FILE		/etc/openvpn/client/openvpn.conf.obfs4
+
