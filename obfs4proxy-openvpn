@@ -45,15 +45,7 @@ OBFS4PROXY_GID="obfs4-ovpn"
 OBFS4PROXY_LOG_LEVEL="none"
 OBFS4PROXY_LOG_IP="false"
 OBFS4PROXY_ARGS=""
-
-TOR_PT_MANAGED_TRANSPORT_VER="1"
-TOR_PT_STATE_LOCATION=""
-TOR_PT_SERVER_TRANSPORTS=""
-TOR_PT_SERVER_TRANSPORT_OPTIONS=""
-TOR_PT_SERVER_BINDADDR=""
-TOR_PT_ORPORT=""
-TOR_PT_CLIENT_TRANSPORTS=""
-TOR_PT_PROXY=""
+OBFS4PROXY_ENVS=""
 
 
 # This will be called when the script is finished/interrupted/something goes wrong
@@ -89,14 +81,6 @@ trap cleanup INT TERM
 sudo_obfs4proxy() {
 
     local OBFS4PROXY_PATH=""
-    local OLD_IFS="$IFS"
-
-    # exporting the required variables for obfs4proxy
-    IFS=","
-    for i in $3; do
-        export $i
-    done
-    IFS="$OLD_IFS"
 
     # This should never really fail as obfs4proxy is checked before
     # in validate_env(). But it's here again for extra protection
@@ -107,7 +91,7 @@ sudo_obfs4proxy() {
     # Since the $PATH might be different for invoked sudo users
     # (this seems to be the case in CenOS), we get the full path
     # of the obfs4proxy and use that instead.
-    sudo -u $1 -g $2 --preserve-env=$3 "$OBFS4PROXY_PATH" $4
+    sudo -u $1 -g $2 /usr/bin/env $3 "$OBFS4PROXY_PATH" $4
 
 }
 
@@ -436,16 +420,21 @@ validate_env() {
 
 initiate_obfs4() {
 
-    TOR_PT_STATE_LOCATION="$OBFS4PROXY_WORKING_DIR/$TRANSPORT/"
+    # Care must be taken (in conf validation phase mostly) that none of the OBFS4PROXY_ENVS set of arguments
+    # contain white space or any other funny charcaters. As right now we rely on bash expansion to seperate them
+    # later on.
+
+    OBFS4PROXY_ENVS="TOR_PT_MANAGED_TRANSPORT_VER=1"
+    OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_STATE_LOCATION=$OBFS4PROXY_WORKING_DIR/$TRANSPORT/"
 
     if [[ "$MODE" == "server" ]]; then
-        TOR_PT_SERVER_TRANSPORTS=$TRANSPORT
-        TOR_PT_SERVER_TRANSPORT_OPTIONS="$TRANSPORT:iat-mode=$IAT_MODE"
-        TOR_PT_SERVER_BINDADDR="$TRANSPORT-$SERVER_OBFS4_BIND_ADDR:$SERVER_OBFS4_BIND_PORT"
-        TOR_PT_ORPORT="$SERVER_OPENVPN_BIND_ADDR:$SERVER_OPENVPN_BIND_PORT"
+        OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_SERVER_TRANSPORTS=$TRANSPORT"
+        [[ "$IAT_MODE" != "0" ]] && OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_SERVER_TRANSPORT_OPTIONS=$TRANSPORT:iat-mode=$IAT_MODE"
+        OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_SERVER_BINDADDR=$TRANSPORT-$SERVER_OBFS4_BIND_ADDR:$SERVER_OBFS4_BIND_PORT"
+        OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_ORPORT=$SERVER_OPENVPN_BIND_ADDR:$SERVER_OPENVPN_BIND_PORT"
     elif [[ "$MODE" == "client" ]]; then
-        TOR_PT_CLIENT_TRANSPORTS=$TRANSPORT
-        TOR_PT_PROXY="$CLIENT_UPSTREAM_PROXY"
+        OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_CLIENT_TRANSPORTS=$TRANSPORT"
+        [[ "$CLIENT_UPSTREAM_PROXY" != "" ]] && OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_PROXY=$CLIENT_UPSTREAM_PROXY"
     fi
 
     # unfortunately, unsafeLogging option doesn't really seem to work. but the
@@ -470,7 +459,6 @@ initiate_obfs4() {
 # the pipe will become invalid and the loop will end
 call_obfs4_openvpn() {
 
-    local PT_ENVS_LIST="TOR_PT_MANAGED_TRANSPORT_VER,TOR_PT_STATE_LOCATION,TOR_PT_SERVER_TRANSPORTS,TOR_PT_SERVER_TRANSPORT_OPTIONS,TOR_PT_SERVER_BINDADDR,TOR_PT_ORPORT,TOR_PT_CLIENT_TRANSPORTS,TOR_PT_PROXY"
     local RE_OBFS4_CLIENT="^CMETHOD $TRANSPORT socks5 127.0.0.1:([0-9]+)"
     local RE_OBFS4_SERVER="^SMETHOD $TRANSPORT ([^ ]+):([0-9]+) ARGS:cert=([a-zA-Z0-9/+]{70}),"
     local RE_OBFS4_ERROR=".*ERROR.*"
@@ -480,7 +468,7 @@ call_obfs4_openvpn() {
     local OLD_UMASK=""
 
     # You can not check the return code of coproc as will point out to the previous command's return code instead
-    coproc CO_PT { sudo_obfs4proxy "$OBFS4PROXY_UID" "$OBFS4PROXY_GID" "$PT_ENVS_LIST" "$OBFS4PROXY_ARGS"; }
+    coproc CO_PT { sudo_obfs4proxy "$OBFS4PROXY_UID" "$OBFS4PROXY_GID" "$OBFS4PROXY_ENVS" "$OBFS4PROXY_ARGS"; }
 
     while read -r line; do
         if [[ "$line" =~ $RE_OBFS4_ERROR ]]; then
