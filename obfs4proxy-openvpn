@@ -77,7 +77,7 @@ cleanup() {
 # We register this as early as possible
 trap cleanup INT TERM
 
-# $1:uid, S2:gid, $3:env, $4:args
+# $1:uid, S2:gid, $3:envs, $4:args
 sudo_obfs4proxy() {
 
     local OBFS4PROXY_PATH=""
@@ -383,12 +383,12 @@ validate_env() {
             grep --extended-regexp --quiet '^ID(_LIKE)?=("|.* )?debian( .*|")?$' /etc/os-release
 
             if [[ $? -eq 0 ]]; then
-                read -p "Debian based system detected. user/group can be created using \"adduser\" continue (y/n)? "
+                read -p "Debian based system detected. user/group can be created using \"adduser\" continue (y/N)? "
                 [[ "${REPLY,}" == "y" ]] || cleanup "Creating user/group is aborted"
                 adduser --system --group --home "$OBFS4PROXY_WORKING_DIR" --no-create-home --gecos "used by obfs4proxy-openvpn" "$OBFS4PROXY_UID"
                 [[ $? -eq 0 ]] || cleanup "adduser invocation failed"
             else
-                read -p "Non-debian based system detected. user/group can be created using \"useradd\" continue (y/n)? "
+                read -p "Non-debian based system detected. user/group can be created using \"useradd\" continue (y/N)? "
                 [[ "${REPLY,}" == "y" ]] || cleanup "Creating user/group is aborted"
                 useradd --system --user-group --home-dir "$OBFS4PROXY_WORKING_DIR" --no-create-home --shell /sbin/nologin --comment "used by obfs4proxy-openvpn" "$OBFS4PROXY_UID"
                 [[ $? -eq 0 ]] || cleanup "useradd invocation failed"
@@ -408,7 +408,7 @@ validate_env() {
     # so we create a rather more relaxed containing dir to host the socks file in a way
     # that could be accessed by the OBFS4PROXY_GID.
     if ! [[ -d "$OBFS4PROXY_WORKING_DIR" ]]; then
-        read -p "Could not find \"$OBFS4PROXY_WORKING_DIR/\" path on this system. Do you want to create it (y/n)? "
+        read -p "Could not find \"$OBFS4PROXY_WORKING_DIR/\" path on this system. Do you want to create it (y/N)? "
         [[ "${REPLY,}" == "y" ]] || cleanup "Creating working directory path is aborted"
 
         install "--owner=$OBFS4PROXY_UID" "--group=$OBFS4PROXY_GID" --mode=0750 --directory "$OBFS4PROXY_WORKING_DIR"

@@ -1,0 +1,37 @@
+# Do NOT use these options:
+#   "local" - will be set by the script
+#   "port","lport" - will be set by the script
+#   "proto" - will be set to tcp-server by the script
+#   "daemon" - you can use obfs4proxy-openvpn.service.sample file
+#     to make a proper systemd service instead.
+#   options that shouldn't be used for TCP tunneling
+#   options that can't generally be used on openvpn server side
+
+# "server" mode can also be used. config just gets slightly more complex
+mode		p2p
+
+# tun device name
+dev		tun_obfs4
+
+# tun device local and remote IP
+ifconfig	10.1.0.1 10.1.0.2
+
+# Optimizing TCP tunnel
+socket-flags	TCP_NODELAY
+
+# While openvpn can be run as root, it's recommended to use a dedicated
+# user:group for it on the server side.
+user		openvpn
+group		openvpn
+
+# We need these as we are dropping privilege
+persist-tun
+persist-key
+
+# if the obfs4 cert kept secret, one may rely on obfs4 alone for
+# authentication and encryption. In such case, the line below
+# can be commented out. Otherwise, aside from the obfs4 cert,
+# openvpn secret key must be also be shared between client and server.
+# It is up to you to decide on this.
+secret /etc/openvpn/secret.obfs4.key 0
+

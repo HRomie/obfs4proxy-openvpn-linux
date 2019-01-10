@@ -4,7 +4,6 @@ After=syslog.target network.target
 
 [Service]
 Type=simple
-PIDFile=/var/lib/obfs4proxy-openvpn/obfs4proxy-openvpn.pid
 ExecStart=/usr/local/bin/obfs4proxy-openvpn
 Restart=on-failure
 RestartSec=30s
