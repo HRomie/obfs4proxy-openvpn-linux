@@ -21,10 +21,12 @@ ifconfig	10.1.0.2 10.1.0.1
 # Optimizing TCP tunnel
 socket-flags	TCP_NODELAY
 
-# While openvpn can be run as root, it's recommended to use a dedicated
-# user for it. It is advised that openvpn and obfs4proxy share the same
-# group on the client side, to not run into permission issues later on.
-user		openvpn
+# While openvpn can be run as root, it's recommended to use a non-privileged
+# user for it. The user 'nobody' should be readily available on all distros
+# but its better if you use a dedicated user like 'openvpn' instead.
+# Furthermore, it is advised that openvpn and obfs4proxy share the same
+# group on the client side (to not run into permission issues later on).
+user		nobody
 group		obfs4-ovpn
 
 # We need these as we are dropping privilege
@@ -34,7 +36,6 @@ persist-key
 # if the obfs4 cert kept secret, one may rely on obfs4 alone for
 # authentication and encryption. In such case, the line below
 # can be commented out. Otherwise, aside from the obfs4 cert,
-# openvpn secret key must be also be shared between client and server.
+# openvpn secret key must also be shared between client and server.
 # It is up to you to decide on this.
 secret /etc/openvpn/secret.obfs4.key 1
-
