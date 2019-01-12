@@ -38,7 +38,7 @@ Most documentations are placed in the sample files in [examples/](examples/) fol
 * Download the [obfs4proxy-openvpn](obfs4proxy-openvpn) script and put it in a location in your *PATH* (e.g, */usr/local/bin/*).
 * Use `obfs4proxy-openvpn --export-cert -` on the server to get the required *CERT* for the client.
 * [obfs4proxy-openvpn.conf.sample](examples/obfs4proxy-openvpn.conf.sample) contains a sample of the needed config file. Edit it to your needs and save it as */etc/obfs4proxy-openvpn.conf* .
-* [openvpn_client.conf.obfs4.sample](examples/openvpn_client.conf.obfs4.sample)/[openvpn_server.conf.obfs4.sample](openvpn_server.conf.obfs4.sample) contain samples of OpenVPN client/server configurations.
+* [openvpn_client.conf.obfs4.sample](examples/openvpn_client.conf.obfs4.sample)/[openvpn_server.conf.obfs4.sample](examples/openvpn_server.conf.obfs4.sample) contain samples of OpenVPN client/server configurations.
 * [obfs4proxy-openvpn.service.sample](examples/obfs4proxy-openvpn.service.sample) contains sample of a systemd unit for obfs4proxy-openvpn.
 
 ### Usage
