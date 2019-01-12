@@ -1,5 +1,6 @@
 #
-# Make sure to read the manual before adjusting these settings
+# Edit this file to your need and save it as /etc/obfs4proxy-openvpn.conf
+#
 # If there are multiple enteries of the same kind, the last one wins the race
 #
 
@@ -15,9 +16,9 @@ IAT_MODE			0
 
 
 ### OpenVPN config file ###################
-# In Debian based distros, better not to use .conf extension if you're going
-# to place it in default openvpn conf folders.
-# This is to avoid accidental auto-startup by openvpn systemd unit
+# In Debian based distros, it's better to not use .conf extension
+#   if you're going to place it in default openvpn conf folders
+#   to avoid accidental auto-startup by openvpn systemd unit.
 
 OPENVPN_CONFIG_FILE		/etc/openvpn/openvpn_client.conf.obfs4
 ###########################################
@@ -25,15 +26,25 @@ OPENVPN_CONFIG_FILE		/etc/openvpn/openvpn_client.conf.obfs4
 
 ### For client mode only ##################
 # Either CERT or (NODE_ID && PUBLIC_KEY) should be specified
+# You can extract the CERT from the obfs4proxy server,
+#   by using 'obfs4proxy-openvpn --export-cert -' on the server
+# UPSTREAM_PROXY is needed if you are behind a proxy server
 
 CLIENT_REMOTE_CERT		3v5WYAEmHHcltDCxHlCo4+g3vEN0E4Aqnu7w/Pt3R4kl42V/5ob2+EhjhvFx3/IoE+DsTA
 #CLIENT_REMOTE_NODE_ID		a6573dd465bc3f1054182b7eaaa1619fde54cbf8
 #CLIENT_REMOTE_PUBLIC_KEY	800195bc31d8f37634f6b1d2e05bc793105e0b5341822a51d23f6eb90d6e3843
-#CLIENT_UPSTREAM_PROXY		socks5://tor:test1234@129.0.0.1:8040
+#CLIENT_UPSTREAM_PROXY		socks5://corp:proxy@129.0.0.1:8040
 ###########################################
 
 
 ### For server mode only ##################
+# OBFS4_BIND_ADDR:OBFS4_BIND_PORT is the one that should be used
+#   in openvpn_client.conf.obfs4. Bear in mind that using a port <1024
+#   for OBFS4_BIND_PORT could fail due to OBFS4PROXY_UID setup.
+# You likely don't need to change OPENVPN_BIND_ADDR:OPENVPN_BIND_PORT
+#   but it can potentially be used to provide both obfuscated and
+#   non-obfuscated openvpn traffic at the same time when OPENVPN_BIND_ADDR
+#   is set to 0.0.0.0 .
 
 SERVER_OBFS4_BIND_ADDR		0.0.0.0
 SERVER_OBFS4_BIND_PORT		1516
@@ -43,9 +54,11 @@ SERVER_OPENVPN_BIND_PORT	1515
 
 
 ### obfs4proxy settings ###################
-# Don't change these unless you know what you're doing
+# Don't change these unless you know what you're doing.
 # WORKING_DIR is Absuloute path only.
 # LOG_LEVEL: none|error|warn|info|debug
+# LOG_IP is supposed to disable scrubbing addresses in the log
+#   but doesn't really seem to work.
 
 OBFS4PROXY_WORKING_DIR		/var/lib/obfs4proxy-openvpn
 OBFS4PROXY_UID			obfs4-ovpn
