@@ -4,6 +4,8 @@ A Bash script for obfuscating OpenVPN traffic using obfs4
 
 ## Overview
 
+![obfs4proxy-openvpn diagram](https://github.com/HRomie/obfs4proxy-openvpn/blob/master/img/obfs4proxy-openvpn-diagram.png)
+
 [obfs4proxy](https://github.com/Yawning/obfs4) developed by the [Tor Project](https://www.torproject.org/), is primarily written to obfuscate Tor traffic. But with a little effort, it can be used to [obfuscate any other TCP traffic as well](https://hamy.io/post/000d/how-to-hide-obfuscate-any-traffic-using-obfs4/).
 
 While there are couple of obfs4proxy general wrappers around, this Bash script is specifically designed to make obfs4proxy work with OpenVPN. It's more of a helper than a wrapper since it bootstraps the start of obfs4proxy/OpenVPN and then gets out of the way.
