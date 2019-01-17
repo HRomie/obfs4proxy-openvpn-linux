@@ -1,7 +1,7 @@
 # Do NOT use these options:
 #   "proto" - will be set to tcp-client by the script
 #   *proxy* - SOCKS5 proxy will be set by the script
-#   "daemon" - you can use obfs4proxy-openvpn.service.sample file
+#   "daemon","inetd" - you can use obfs4proxy-openvpn.service.sample file
 #     to make a proper systemd service instead.
 #   options that shouldn't be used for TCP tunneling
 #   options that can't generally be used on openvpn client side
@@ -33,9 +33,9 @@ group		obfs4-ovpn
 persist-tun
 persist-key
 
-# if the obfs4 cert kept secret, one may rely on obfs4 alone for
-# authentication and encryption. In such case, the line below
-# can be commented out. Otherwise, aside from the obfs4 cert,
-# openvpn secret key must also be shared between client and server.
-# It is up to you to decide on this.
+# The imported key from the server.
+#
+# For more advanced options, take a look at here:
+# https://hamy.io/post/000f/obfs4proxy-openvpn-obfuscating-openvpn-traffic-using-obfs4/#cia-triad
+#
 secret /etc/openvpn/secret.obfs4.key 1
