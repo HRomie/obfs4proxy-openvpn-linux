@@ -4,7 +4,7 @@
 # Copyright (c) 2019 Hamy - https://hamy.io
 
 
-VERSION="0.14.1"
+VERSION="0.14.2"
 CONF_FILE="/etc/obfs4proxy-openvpn.conf"
 MODE=""
 TRANSPORT="obfs4"
@@ -19,16 +19,16 @@ CLIENT_REMOTE_CREDENTIALS=""
 CLIENT_UPSTREAM_PROXY=""
 CLIENT_OPENVPN_SOCKS5_FILE=""
 
-SERVER_OBFS4_BIND_ADDR=""
-SERVER_OBFS4_BIND_PORT=""
-SERVER_OPENVPN_BIND_ADDR=""
-SERVER_OPENVPN_BIND_PORT=""
+SERVER_OBFS4_BIND_ADDR="0.0.0.0"
+SERVER_OBFS4_BIND_PORT="1516"
+SERVER_OPENVPN_BIND_ADDR="127.0.0.1"
+SERVER_OPENVPN_BIND_PORT="1515"
 SERVER_EXPORT_CERT=""
 
 OBFS4PROXY_WORKING_DIR="/var/lib/obfs4proxy-openvpn"
 OBFS4PROXY_UID="obfs4-ovpn"
 OBFS4PROXY_GID="obfs4-ovpn"
-OBFS4PROXY_LOG_LEVEL="none"
+OBFS4PROXY_LOG_LEVEL="error"
 OBFS4PROXY_LOG_IP="false"
 OBFS4PROXY_ARGS=""
 OBFS4PROXY_ENVS=""
@@ -263,10 +263,9 @@ import_conf() {
 # more validations after the initial conf file load
 validate_obfs4_conf() {
 
-    if [[ "$MODE" == "server" ]]; then
-        for i in "$SERVER_OBFS4_BIND_ADDR" "$SERVER_OBFS4_BIND_PORT" "$SERVER_OPENVPN_BIND_ADDR" "$SERVER_OPENVPN_BIND_PORT"; do
-            [[ "$i" != "" ]] || cleanup "SERVER_* config is incomplete"
-        done
+    if [[ "$MODE" == "" ]]; then
+        cleanup "No known MODE of operation"
+
     elif [[ "$MODE" == "client" ]]; then
         if [[ "$SERVER_EXPORT_CERT" != "" ]]; then
             cleanup "exporting cert is only available on server mode"
@@ -284,8 +283,6 @@ validate_obfs4_conf() {
                 CLIENT_REMOTE_CREDENTIALS="node-id=$CLIENT_REMOTE_NODE_ID;public-key=$CLIENT_REMOTE_PUBLIC_KEY"
             fi
         fi
-    else
-        cleanup "No known MODE of operation"
     fi
 
 }
@@ -300,6 +297,10 @@ validate_openvpn_conf() {
     local RE=""
     local RE_OPENVPN_USER='^(--)?user[[:blank:]]+"?([^"]+)"?[[:blank:]]*$'
     local RE_OPENVPN_GROUP='^(--)?group[[:blank:]]+"?([^"]+)"?[[:blank:]]*$'
+    local RE_OPENVPN_CONFIG='^(--)?config[[:blank:]]'
+    local RE_OPENVPN_DAEMON='^(--)?(inetd|daemon)([[:blank:]]|$)'
+    local RE_OPENVPN_PROXY='^(--)?((http|socks)-proxy)[[:blank:]]'
+    local RE_OPENVPN_PORT='^(--)?((http|socks)-proxy)[[:blank:]]'
 
     [[ -f "$OPENVPN_CONFIG_FILE" ]] || cleanup "Could not access \"$OPENVPN_CONFIG_FILE\""
 
@@ -313,7 +314,10 @@ validate_openvpn_conf() {
 
     while read -r line; do
         if [[ "$line" =~ $RE_OPENVPN_USER ]]; then OPENVPN_USER="${BASH_REMATCH[2]}"
-        elif [[ "$line" =~ $RE_OPENVPN_GROUP ]]; then OPENVPN_GROUP="${BASH_REMATCH[2]}"; fi
+        elif [[ "$line" =~ $RE_OPENVPN_GROUP ]]; then OPENVPN_GROUP="${BASH_REMATCH[2]}"
+        elif [[ "$line" =~ $RE_OPENVPN_CONFIG ]]; then echo "**WARNING: Nested openvpn \"--config\" detected in \"$OPENVPN_CONFIG_FILE\". Not going to validate those." >&2
+        elif [[ "$line" =~ $RE_OPENVPN_DAEMON ]]; then cleanup "Unsupported option: \"--${BASH_REMATCH[2]}\" in \"$OPENVPN_CONFIG_FILE\""
+        elif [[ "$line" =~ $RE_OPENVPN_PROXY ]]; then cleanup "Unsupported option: \"--${BASH_REMATCH[2]}\" in \"$OPENVPN_CONFIG_FILE\""; fi
     done <"$OPENVPN_CONFIG_FILE"
 
     if [[ "$MODE" == "client" ]]; then

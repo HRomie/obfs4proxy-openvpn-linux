@@ -63,6 +63,6 @@ SERVER_OPENVPN_BIND_PORT	1515
 OBFS4PROXY_WORKING_DIR		/var/lib/obfs4proxy-openvpn
 OBFS4PROXY_UID			obfs4-ovpn
 OBFS4PROXY_GID			obfs4-ovpn
-OBFS4PROXY_LOG_LEVEL		warn
+OBFS4PROXY_LOG_LEVEL		error
 OBFS4PROXY_LOG_IP		false
 ###########################################
