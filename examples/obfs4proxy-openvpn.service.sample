@@ -2,7 +2,8 @@
 # 2. Remove the '.sample' suffix and copy the file to '/etc/systemd/system/'
 # 3. Reload systemd configuration: 'systemctl daemon-reload'
 # 4. Start the service: 'systemctl start obfs4proxy-openvpn.service'
-# 5. Enable the service at startup: 'systemctl enable obfs4proxy-openvpn.service'
+# 5. Optionally check its status: 'systemctl status obfs4proxy-openvpn.service'
+# 6. Enable the service at startup: 'systemctl enable obfs4proxy-openvpn.service'
 
 [Unit]
 Description=obfs4proxy-openvpn service
