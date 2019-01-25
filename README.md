@@ -35,7 +35,7 @@ The script must be run as root to do its magic but it will use a dedicated accou
 
 ### Installing
 
-* Download the [obfs4proxy-openvpn](obfs4proxy-openvpn) script and put it in a location in your *PATH* (e.g, */usr/local/bin/*).
+* Download the [obfs4proxy-openvpn](obfs4proxy-openvpn) script, give it +x permission and put it in a location in your *PATH* (e.g, */usr/local/bin/*).
 * [obfs4proxy-openvpn.conf.sample](examples/obfs4proxy-openvpn.conf.sample) contains a sample of the needed config file. Edit it to your needs and save it as */etc/obfs4proxy-openvpn.conf* .
   * Use `obfs4proxy-openvpn --export-cert -` on the server to get the required *CERT* for the client.
   * [openvpn_client.conf.obfs4.sample](examples/openvpn_client.conf.obfs4.sample) / [openvpn_server.conf.obfs4.sample](examples/openvpn_server.conf.obfs4.sample) contain samples of OpenVPN client/server configurations.
