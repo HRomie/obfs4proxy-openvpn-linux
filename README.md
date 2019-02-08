@@ -1,6 +1,6 @@
 # obfs4proxy-openvpn
 
-A Bash script for obfuscating OpenVPN traffic using obfs4
+A Bash script for obfuscating OpenVPN traffic using obfs4proxy
 
 ## Overview
 
@@ -9,6 +9,8 @@ A Bash script for obfuscating OpenVPN traffic using obfs4
 [obfs4proxy](https://github.com/Yawning/obfs4) developed by the [Tor Project](https://www.torproject.org/), is primarily written to obfuscate Tor traffic. But with a little effort, it can be used to [obfuscate any other TCP traffic as well](https://hamy.io/post/000d/how-to-hide-obfuscate-any-traffic-using-obfs4/).
 
 While there are couple of obfs4proxy general wrappers around, this Bash script is specifically designed to make obfs4proxy work with OpenVPN. It's more of a helper than a wrapper since it bootstraps the start of obfs4proxy/OpenVPN and then gets out of the way.
+
+It is specifically written for obfs4 transport protocol. But it also supports older obfs3 and obfs2 transports. Unless you have a good reason, you should stick to obfs4.
 
 Since the script uses standard Linux commands, it should work in most major distros but it's been specifically tested on:
 
@@ -35,9 +37,12 @@ The script must be run as root to do its magic but it will use a dedicated accou
 
 ### Installing
 
-* Download the [obfs4proxy-openvpn](obfs4proxy-openvpn) script, give it +x permission and put it in a location in your *PATH* (e.g, */usr/local/bin/*).
+* Download the [obfs4proxy-openvpn](obfs4proxy-openvpn) script, give it +x permission and put it in a location in your *PATH* (e.g, */usr/local/bin/*):
+  * `wget https://raw.githubusercontent.com/HRomie/obfs4proxy-openvpn/master/obfs4proxy-openvpn`
+  * `mv obfs4proxy-openvpn /usr/local/bin`
+  * `chmod +x /usr/local/bin/obfs4proxy-openvpn`
 * [obfs4proxy-openvpn.conf.sample](examples/obfs4proxy-openvpn.conf.sample) contains a sample of the needed config file. Edit it to your needs and save it as */etc/obfs4proxy-openvpn.conf* .
-  * Use `obfs4proxy-openvpn --export-cert -` on the server to get the required *CERT* for the client.
+  * Use `obfs4proxy-openvpn --export-cert -` on the server to get the required obfs4 *CERT* for the client.
   * [openvpn_client.conf.obfs4.sample](examples/openvpn_client.conf.obfs4.sample) / [openvpn_server.conf.obfs4.sample](examples/openvpn_server.conf.obfs4.sample) contain samples of OpenVPN client/server configurations.
 * [obfs4proxy-openvpn.service.sample](examples/obfs4proxy-openvpn.service.sample) contains sample of a systemd unit for obfs4proxy-openvpn.
 

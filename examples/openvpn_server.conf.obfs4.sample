@@ -35,5 +35,5 @@ persist-key
 # For more advanced options, take a look at here:
 # https://hamy.io/post/000f/obfs4proxy-openvpn-obfuscating-openvpn-traffic-using-obfs4/#cia-triad
 #
-secret /etc/openvpn/secret.obfs4.key 0
+secret		/etc/openvpn/secret.obfs4.key 0
 

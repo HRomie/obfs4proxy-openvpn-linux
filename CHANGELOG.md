@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.0] - 2019-02-08
+### Added
+- Support for obfs3 and obfs2 transports
+### Changed
+- Small changes in example files
+
 ## [0.14.2] - 2019-01-17
 ### Added
 - More openvpn config validation checks

@@ -6,14 +6,13 @@
 #   options that shouldn't be used for TCP tunneling
 #   options that can't generally be used on openvpn client side
 
-# "server" mode can also be used. config just gets slightly more complex
 mode		p2p
 
 # tun device name
 dev		tun_obfs4
 
 # Address and port of the obfs4proxy server
-remote 10.11.12.13 1516
+remote		10.11.12.13 1516
 
 # tun device local and remote IP
 ifconfig	10.1.0.2 10.1.0.1
@@ -24,7 +23,7 @@ socket-flags	TCP_NODELAY
 # While openvpn can be run as root, it's recommended to use a non-privileged
 # user for it. The user 'nobody' should be readily available on all distros
 # but its better if you use a dedicated user like 'openvpn' instead.
-# Furthermore, it is advised that openvpn and obfs4proxy share the same
+# Furthermore, for obfs4, it is advised that openvpn and obfs4proxy share the same
 # group on the client side (to not run into permission issues later on).
 user		nobody
 group		obfs4-ovpn
@@ -38,4 +37,4 @@ persist-key
 # For more advanced options, take a look at here:
 # https://hamy.io/post/000f/obfs4proxy-openvpn-obfuscating-openvpn-traffic-using-obfs4/#cia-triad
 #
-secret /etc/openvpn/secret.obfs4.key 1
+secret		/etc/openvpn/secret.obfs4.key 1

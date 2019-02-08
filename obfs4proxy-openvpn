@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-# obfs4proxy-openvpn - Obfuscating OpenVPN traffic using obfs4
+# obfs4proxy-openvpn - Obfuscating OpenVPN traffic using obfs4proxy
 # Copyright (c) 2019 Hamy - https://hamy.io
 
 
-VERSION="0.14.2"
+VERSION="0.15.0"
 CONF_FILE="/etc/obfs4proxy-openvpn.conf"
 MODE=""
 TRANSPORT="obfs4"
@@ -103,6 +103,37 @@ gen_socks5_auth() {
 
 }
 
+export_cert() {
+    local RE="cert=([a-zA-Z0-9/+]{70}),"
+    local CERT=""
+    local RES=""
+    local OLD_UMASK=""
+
+    if [[ "$1" =~ $RE ]]; then
+        CERT="${BASH_REMATCH[1]}"
+    else
+        cleanup "Parsing server response failed. Could not retrieve the cert"
+    fi
+
+    if [[ "$SERVER_EXPORT_CERT" == "-" ]]; then
+        echo "$CERT"
+    elif [[ -e "$SERVER_EXPORT_CERT" ]]; then
+        cleanup "The destination cert file already exists"
+    else
+        OLD_UMASK="$(umask)"
+        umask 0077
+        echo "$CERT" > "$SERVER_EXPORT_CERT"
+        RES=$?
+        umask="$OLD_UMASK"
+        if [[ $RES -eq 0 ]]; then
+            echo "cert successfully exported"
+        else
+            cleanup "Could not write the cert to the destination"
+        fi
+    fi
+
+}
+
 # Input options and parameters are being parsed here
 parse_options() {
 
@@ -129,14 +160,11 @@ parse_options() {
                 ;;
             -V|--version)
                 cat <<-EOF
-
-			****************************************************************
-			* obfs4proxy-openvpn - Obfuscating OpenVPN traffic using obfs4 *
-			* Copyright (c) 2019 Hamy - https://hamy.io                    *
-			****************************************************************
-
+			*********************************************************************
+			* obfs4proxy-openvpn - Obfuscating OpenVPN traffic using obfs4proxy *
+			* Copyright (c) 2019 Hamy - https://hamy.io                         *
+			*********************************************************************
 			obfs4proxy-openvpn v$VERSION
-
 			EOF
                 shift
                 cleanup
@@ -168,30 +196,22 @@ parse_options() {
 }
 
 show_help() {
-
     cat <<-EOF
-
 	Usage: obfs4proxy-openvpn [OPTION]... [CONFIG_FILE]
-
 	obfs4proxy-openvpn
-	  Obfuscating OpenVPN traffic using obfs4
-
+	  Obfuscating OpenVPN traffic using obfs4proxy
 	Mandatory arguments to long options are mandatory for short options too.
 	  -c, --config CONFIG_FILE  loads the obfs4proxy-openvpn config file
 	                            see the manual for more info
 	                            default is $CONF_FILE
 	  --export-cert FILE        exports the obfs4 cert in server mode
-	                            to be imported to the clients
+	                            (to be imported to the clients)
 	                            use "-" for stdout
 	  -V, --version             outputs version and copyright information
 	  -h, --help                displays this help
-
 	Please fully read the manual before using this script.
-
 	https://hamy.io
-
 	EOF
-
 }
 
 # validate the conf file options and import them
@@ -202,7 +222,7 @@ import_conf() {
     local CONFIG_LINE_COUNTER=0
     local RE_LINE_SKIP="^[[:blank:]]*(#.*)?$"
     local RE_MODE="^MODE[[:blank:]]+(client|server)[[:blank:]]*$"
-    local RE_TRANSPORT="^TRANSPORT[[:blank:]]+(obfs4)[[:blank:]]*$"
+    local RE_TRANSPORT="^TRANSPORT[[:blank:]]+(obfs4|obfs3|obfs2)[[:blank:]]*$"
     local RE_CLIENT_REMOTE_CERT="^CLIENT_REMOTE_CERT[[:blank:]]+([a-zA-Z0-9/+]{70})[[:blank:]]*$"
     local RE_CLIENT_REMOTE_NODE_ID="^CLIENT_REMOTE_NODE_ID[[:blank:]]+([0-9a-z]{40})[[:blank:]]*$"
     local RE_CLIENT_REMOTE_PUBLIC_KEY="^CLIENT_REMOTE_PUBLIC_KEY[[:blank:]]+([0-9a-z]{64})[[:blank:]]*$"
@@ -265,22 +285,29 @@ validate_obfs4_conf() {
 
     if [[ "$MODE" == "" ]]; then
         cleanup "No known MODE of operation"
+    fi
 
-    elif [[ "$MODE" == "client" ]]; then
-        if [[ "$SERVER_EXPORT_CERT" != "" ]]; then
-            cleanup "exporting cert is only available on server mode"
-        elif [[ "$CLIENT_REMOTE_CERT" != "" ]]; then
-            if [[ "$CLIENT_REMOTE_NODE_ID" != "" || "$CLIENT_REMOTE_PUBLIC_KEY" != "" ]]; then
-                cleanup "You can not specify both CLIENT_REMOTE_CERT and CLIENT_REMOTE_NODE_ID/CLIENT_REMOTE_PUBLIC_KEY";
-            else
-                CLIENT_REMOTE_CREDENTIALS="cert=$CLIENT_REMOTE_CERT"
-            fi
+    if [[ "$SERVER_EXPORT_CERT" != "" ]]; then
+        if [[ "$TRANSPORT" != "obfs4" || "$MODE" != "server" ]]; then
+            cleanup "exporting cert is only available for obfs4 and in server mode"
+        fi
+    fi
 
-        else
-            if [[ "$CLIENT_REMOTE_NODE_ID" == "" || "$CLIENT_REMOTE_PUBLIC_KEY" == "" ]]; then
-                cleanup "You must specify either CLIENT_REMOTE_CERT or both CLIENT_REMOTE_NODE_ID and CLIENT_REMOTE_PUBLIC_KEY"
+    if [[ "$TRANSPORT" == "obfs4" ]]; then
+        if [[ "$MODE" == "client" ]]; then
+            if [[ "$CLIENT_REMOTE_CERT" != "" ]]; then
+                if [[ "$CLIENT_REMOTE_NODE_ID" != "" || "$CLIENT_REMOTE_PUBLIC_KEY" != "" ]]; then
+                    cleanup "You can not specify both CLIENT_REMOTE_CERT and CLIENT_REMOTE_NODE_ID/CLIENT_REMOTE_PUBLIC_KEY";
+                else
+                    CLIENT_REMOTE_CREDENTIALS="cert=$CLIENT_REMOTE_CERT"
+                fi
+
             else
-                CLIENT_REMOTE_CREDENTIALS="node-id=$CLIENT_REMOTE_NODE_ID;public-key=$CLIENT_REMOTE_PUBLIC_KEY"
+                if [[ "$CLIENT_REMOTE_NODE_ID" == "" || "$CLIENT_REMOTE_PUBLIC_KEY" == "" ]]; then
+                    cleanup "You must specify either CLIENT_REMOTE_CERT or both CLIENT_REMOTE_NODE_ID and CLIENT_REMOTE_PUBLIC_KEY"
+                else
+                    CLIENT_REMOTE_CREDENTIALS="node-id=$CLIENT_REMOTE_NODE_ID;public-key=$CLIENT_REMOTE_PUBLIC_KEY"
+                fi
             fi
         fi
     fi
@@ -320,7 +347,7 @@ validate_openvpn_conf() {
         elif [[ "$line" =~ $RE_OPENVPN_PROXY ]]; then cleanup "Unsupported option: \"--${BASH_REMATCH[2]}\" in \"$OPENVPN_CONFIG_FILE\""; fi
     done <"$OPENVPN_CONFIG_FILE"
 
-    if [[ "$MODE" == "client" ]]; then
+    if [[ "$MODE" == "client" && "$TRANSPORT" == "obfs4" ]]; then
         if [[ "$OPENVPN_USER" != "root" ]]; then
             if [[ "$OPENVPN_GROUP" != "$OBFS4PROXY_GID" ]]; then
                 echo "**WARNING: OpenVPN group differ from obfs4proxy group. This could result in OpenVPN permission issues when re-reading auth_socks file (upon SIGHUP/SIGUSR1)" >&2
@@ -330,7 +357,7 @@ validate_openvpn_conf() {
 
 }
 
-# Validating the envoronment the script is running on
+# Validating the environment the script is running on
 validate_env() {
 
     local COMMANDS_LIST="sudo grep getent openvpn obfs4proxy"
@@ -407,7 +434,7 @@ validate_env() {
 initiate_obfs4() {
 
     # Care must be taken (in conf validation phase mostly) that none of the OBFS4PROXY_ENVS set of arguments
-    # contain white space or any other funny charcaters. As right now we rely on bash expansion to seperate them
+    # contain white space or any other funny characters. As right now we rely on bash expansion to separate them
     # later on.
 
     OBFS4PROXY_ENVS="TOR_PT_MANAGED_TRANSPORT_VER=1"
@@ -415,9 +442,11 @@ initiate_obfs4() {
 
     if [[ "$MODE" == "server" ]]; then
         OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_SERVER_TRANSPORTS=$TRANSPORT"
-        [[ "$IAT_MODE" != "0" ]] && OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_SERVER_TRANSPORT_OPTIONS=$TRANSPORT:iat-mode=$IAT_MODE"
         OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_SERVER_BINDADDR=$TRANSPORT-$SERVER_OBFS4_BIND_ADDR:$SERVER_OBFS4_BIND_PORT"
         OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_ORPORT=$SERVER_OPENVPN_BIND_ADDR:$SERVER_OPENVPN_BIND_PORT"
+        if [[ "$TRANSPORT" == "obfs4" ]]; then
+            [[ "$IAT_MODE" != "0" ]] && OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_SERVER_TRANSPORT_OPTIONS=$TRANSPORT:iat-mode=$IAT_MODE"
+        fi
     elif [[ "$MODE" == "client" ]]; then
         OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_CLIENT_TRANSPORTS=$TRANSPORT"
         [[ "$CLIENT_UPSTREAM_PROXY" != "" ]] && OBFS4PROXY_ENVS="$OBFS4PROXY_ENVS TOR_PT_PROXY=$CLIENT_UPSTREAM_PROXY"
@@ -446,12 +475,10 @@ initiate_obfs4() {
 call_obfs4_openvpn() {
 
     local RE_OBFS4_CLIENT="^CMETHOD $TRANSPORT socks5 127.0.0.1:([0-9]+)"
-    local RE_OBFS4_SERVER="^SMETHOD $TRANSPORT ([^ ]+):([0-9]+) ARGS:cert=([a-zA-Z0-9/+]{70}),"
+    local RE_OBFS4_SERVER="^SMETHOD $TRANSPORT ([^ ]+):([0-9]+) ARGS:([^ ]*)"
     local RE_OBFS4_ERROR=".*ERROR.*"
     local CLIENT_OBFS4_SOCKS5_PORT=""
     local SERVER_OBFS4_BIND_ADDR_REAL=""
-    local RES=""
-    local OLD_UMASK=""
 
     # You can not check the return code of coproc as will point out to the previous command's return code instead
     coproc CO_PT { sudo_obfs4proxy "$OBFS4PROXY_UID" "$OBFS4PROXY_GID" "$OBFS4PROXY_ENVS" "$OBFS4PROXY_ARGS"; }
@@ -464,57 +491,50 @@ call_obfs4_openvpn() {
                 CLIENT_OBFS4_SOCKS5_PORT=${BASH_REMATCH[1]}
             elif [[ "$line" == "CMETHODS DONE" ]];then 
                 if [[ "$CLIENT_OBFS4_SOCKS5_PORT" != "" ]]; then
-                    gen_socks5_auth "$CLIENT_REMOTE_CREDENTIALS" "$IAT_MODE" "$OBFS4PROXY_UID" "$OBFS4PROXY_GID" "$CLIENT_OPENVPN_SOCKS5_FILE"
+                    if [[ "$TRANSPORT" == "obfs4" ]]; then
+                        gen_socks5_auth "$CLIENT_REMOTE_CREDENTIALS" "$IAT_MODE" "$OBFS4PROXY_UID" "$OBFS4PROXY_GID" "$CLIENT_OPENVPN_SOCKS5_FILE"
+                    fi
                     cat <<-EOF
-			*Client initialization successful
+			*Client $TRANSPORT initialization successful
 			*OpenVPN will be using the SOCKS5 proxy running on 127.0.0.1:$CLIENT_OBFS4_SOCKS5_PORT
 			*Launching OpenVPN instance in 3 seconds...
 			EOF
-                sleep 3
-                openvpn --config "$OPENVPN_CONFIG_FILE" --proto tcp-client --socks-proxy 127.0.0.1 $CLIENT_OBFS4_SOCKS5_PORT "$CLIENT_OPENVPN_SOCKS5_FILE"
-                [[ $? -eq 0 ]] || cleanup "OpenVPN launch failed"
-            fi
-            break
-        fi
-    elif [[ "$MODE" == "server" ]]; then
-        if [[ "$line" =~ $RE_OBFS4_SERVER ]]; then
-            if [[ "$SERVER_EXPORT_CERT" != "" ]]; then
-                if [[ "$SERVER_EXPORT_CERT" == "-" ]]; then
-                    echo "${BASH_REMATCH[3]}"
-                elif [[ -e "$SERVER_EXPORT_CERT" ]]; then
-                    cleanup "The destination file already exists"
-                else
-                    OLD_UMASK="$(umask)"
-                    umask 0077
-                    echo "${BASH_REMATCH[3]}" > "$SERVER_EXPORT_CERT"
-                    RES=$?
-                    umask="$OLD_UMASK"
-                    if [[ $RES -eq 0 ]]; then
-                        echo "cert successfully exported"
-                    else    
-                        cleanup "Could not write the cert to the destination"
+                    sleep 3
+                    if [[ "$TRANSPORT" == "obfs4" ]]; then
+                        openvpn --config "$OPENVPN_CONFIG_FILE" --proto tcp-client --socks-proxy 127.0.0.1 $CLIENT_OBFS4_SOCKS5_PORT "$CLIENT_OPENVPN_SOCKS5_FILE"
+                    else
+                        openvpn --config "$OPENVPN_CONFIG_FILE" --proto tcp-client --socks-proxy 127.0.0.1 $CLIENT_OBFS4_SOCKS5_PORT
                     fi
+                    [[ $? -eq 0 ]] || cleanup "OpenVPN launch failed"
                 fi
-                cleanup
+                break
             fi
-            SERVER_OBFS4_BIND_ADDR_REAL="${BASH_REMATCH[1]}:${BASH_REMATCH[2]}"
-        elif [[ "$line" == "SMETHODS DONE" ]];then
-            if [[ "$SERVER_OBFS4_BIND_ADDR_REAL" != "" ]]; then
-                cat <<-EOF
-			*Server initialization successful
+        elif [[ "$MODE" == "server" ]]; then
+            if [[ "$line" =~ $RE_OBFS4_SERVER ]]; then
+                if [[ "$SERVER_EXPORT_CERT" != "" ]]; then
+                    export_cert "${BASH_REMATCH[3]}"
+                    cleanup
+                fi
+                SERVER_OBFS4_BIND_ADDR_REAL="${BASH_REMATCH[1]}:${BASH_REMATCH[2]}"
+            elif [[ "$line" == "SMETHODS DONE" ]];then
+                if [[ "$SERVER_OBFS4_BIND_ADDR_REAL" != "" ]]; then
+                    cat <<-EOF
+			*Server $TRANSPORT initialization successful
 			*Reverse proxy is listening on $SERVER_OBFS4_BIND_ADDR_REAL
-			*You may use --export-cert to get the required cert for the clients
 			*OpenVPN will be listening on $SERVER_OPENVPN_BIND_ADDR:$SERVER_OPENVPN_BIND_PORT
-			*Launching OpenVPN instance in 3 seconds...
 			EOF
-                sleep 3
-                openvpn --config "$OPENVPN_CONFIG_FILE" --proto tcp-server --local $SERVER_OPENVPN_BIND_ADDR --lport $SERVER_OPENVPN_BIND_PORT
-                [[ $? -eq 0 ]] || cleanup "OpenVPN launch failed"
+                    if [[ "$TRANSPORT" == "obfs4" ]]; then
+                        echo "*You may use --export-cert to get the required cert for the clients"
+                    fi
+                    echo "*Launching OpenVPN instance in 3 seconds..."
+                    sleep 3
+                    openvpn --config "$OPENVPN_CONFIG_FILE" --proto tcp-server --local $SERVER_OPENVPN_BIND_ADDR --lport $SERVER_OPENVPN_BIND_PORT
+                    [[ $? -eq 0 ]] || cleanup "OpenVPN launch failed"
+                fi
+                break
             fi
-            break
         fi
-    fi
-done <&${CO_PT[0]}
+    done <&${CO_PT[0]}
 
 }
 
