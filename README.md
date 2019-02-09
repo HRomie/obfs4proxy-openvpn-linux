@@ -50,13 +50,13 @@ The script must be run as root to do its magic but it will use a dedicated accou
 
 `obfs4proxy-openvpn --help` should give you some basic info on the command line arguments.
 
-Most needed documentations are placed in the sample files in [examples/](examples/) folder. That should be enough to get you started. But a more in-depth doc can be found here: [obfs4proxy-openvpn: Obfuscating OpenVPN traffic using obfs4](https://hamy.io/post/000f/obfs4proxy-openvpn-obfuscating-openvpn-traffic-using-obfs4/)
+Most needed documentations are placed in the sample files in [examples/](examples/) folder. That should be enough to get you started. But a more in-depth doc can be found here: [obfs4proxy-openvpn: Obfuscating OpenVPN traffic using obfs4](https://hamy.io/post/000f/obfs4proxy-openvpn-obfuscating-openvpn-traffic-using-obfs4proxy/)
 
 After the initial startup, the execution is passed to openvpn and it stays in the foreground (just like the real openvpn execution). You may then use the provided systemd service sample file to run it as a service.
 
 ## Feedback
 
-I would love to know you thoughts on this project. Please share them with me [here](https://hamy.io/post/000f/obfs4proxy-openvpn-obfuscating-openvpn-traffic-using-obfs4/#disqus_thread).
+I would love to know you thoughts on this project. Please share them with me [here](https://hamy.io/post/000f/obfs4proxy-openvpn-obfuscating-openvpn-traffic-using-obfs4proxy/#disqus_thread).
 
 ## Author
 
@@ -73,7 +73,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Helpful links
 
-* [Project's dedicated blog post](https://hamy.io/post/000f/obfs4proxy-openvpn-obfuscating-openvpn-traffic-using-obfs4/)
+* [Project's dedicated blog post](https://hamy.io/post/000f/obfs4proxy-openvpn-obfuscating-openvpn-traffic-using-obfs4proxy/)
 * [Tor Pluggable Transports](https://www.torproject.org/docs/pluggable-transports)
 * [pt-spec-v1](https://gitweb.torproject.org/torspec.git/tree/pt-spec.txt)
 * [obfs4-spec](https://gitweb.torproject.org/pluggable-transports/obfs4.git/tree/doc/obfs4-spec.txt)
