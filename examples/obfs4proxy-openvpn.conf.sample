@@ -32,7 +32,8 @@ IAT_MODE			0
 # You can extract the CERT from the obfs4proxy server,
 #   by using 'obfs4proxy-openvpn --export-cert -' on the server
 
-CLIENT_REMOTE_CERT		ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ABCDEF
+#CLIENT_REMOTE_CERT		ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ABCDEF
+#
 #CLIENT_REMOTE_NODE_ID		0123456789abcdef0123456789abcdef01234567
 #CLIENT_REMOTE_PUBLIC_KEY	0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 ################################################
