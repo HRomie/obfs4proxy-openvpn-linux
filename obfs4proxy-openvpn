@@ -4,7 +4,7 @@
 # Copyright (c) 2019 Hamy - https://hamy.io
 
 
-VERSION="0.15.0"
+VERSION="0.15.1"
 CONF_FILE="/etc/obfs4proxy-openvpn.conf"
 MODE=""
 TRANSPORT="obfs4"
@@ -252,7 +252,7 @@ import_conf() {
     fi
     RE="^..0$"
     if ! [[ "$CONF_FILE_PERM" =~ $RE ]]; then
-        echo "**WARNING: world-readable conf file. This might be a security risk" >&2
+        echo "**WARNING: conf file is world-readable. This might be a security risk" >&2
     fi
 
     while read -r line; do
@@ -360,7 +360,7 @@ validate_openvpn_conf() {
 # Validating the environment the script is running on
 validate_env() {
 
-    local COMMANDS_LIST="sudo grep getent openvpn obfs4proxy"
+    local COMMANDS_LIST="sudo ps kill grep getent openvpn obfs4proxy"
     local UID_OK=0
     local GID_OK=0
     local OLD_IFS="$IFS"
@@ -371,7 +371,7 @@ validate_env() {
     IFS=" "
     for i in $COMMANDS_LIST; do
         command -v $i >/dev/null
-        [[ $? -eq 0 ]] || cleanup "$i command could not be found in the PATH"
+        [[ $? -eq 0 ]] || cleanup "\"$i\" could not be found in PATH. Maybe you need to install it?"
     done
     IFS="$OLD_IFS"
 

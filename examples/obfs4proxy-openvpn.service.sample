@@ -1,3 +1,6 @@
+# * NOTE: You MUST first ensure that obfs4proxy-openvpn works in the cli mode,
+# * before setting it up as a service.
+#
 # 1. Adjust the 'ExecStart' line if required
 # 2. Remove the '.sample' suffix and copy the file to '/etc/systemd/system/'
 # 3. Reload systemd configuration: 'systemctl daemon-reload'

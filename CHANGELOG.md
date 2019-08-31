@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.1] - 2019-08-31
+### Added
+- Extra checks for the required commands
+### Changed
+- OpenVPN sample files now use AES-256-CBC cipher by default
+
 ## [0.15.0] - 2019-02-08
 ### Added
 - Support for obfs3 and obfs2 transports

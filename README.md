@@ -15,7 +15,7 @@ It is specifically written for obfs4 transport protocol. But it also supports ol
 Since the script uses standard Linux commands, it should work in most major distros but it's been specifically tested on:
 
 * Ubuntu 18.04
-* Debian 9
+* Debian 9, 10
 * CentOS 7
 * Fedora 29
 
@@ -45,8 +45,10 @@ The script must be run as root to do its magic but it will use a dedicated accou
   * Use `obfs4proxy-openvpn --export-cert -` on the server to get the required obfs4 *CERT* for the client.
   * [openvpn_client.conf.obfs4.sample](examples/openvpn_client.conf.obfs4.sample) / [openvpn_server.conf.obfs4.sample](examples/openvpn_server.conf.obfs4.sample) contain samples of OpenVPN client/server configurations.
 * [obfs4proxy-openvpn.service.sample](examples/obfs4proxy-openvpn.service.sample) contains sample of a systemd unit for obfs4proxy-openvpn.
-* Also in order to run the this script, pre-shared key must be created and also be imported to the client:
-	* This can be done using a simple command: `openvpn --genkey --secret /etc/openvpn/secret.obfs4.key`
+  * By default, the provided OpenVPN configurations use pre-shared key. So the key should be created on the server and then be imported to the client as well.
+    * Key creation on the server can be done using: `openvpn --genkey --secret /etc/openvpn/secret.obfs4.key`
+    * Use the same location on the client (*/etc/openvpn/secret.obfs4.key*), to import the generated key
+
 ### Usage
 
 `obfs4proxy-openvpn --help` should give you some basic info on the command line arguments.

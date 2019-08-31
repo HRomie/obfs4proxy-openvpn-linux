@@ -34,7 +34,12 @@ persist-key
 
 # The imported key from the server.
 #
-# For more advanced options, take a look at here:
+# For more advanced options, take a look at:
 # https://hamy.io/post/000f/obfs4proxy-openvpn-obfuscating-openvpn-traffic-using-obfs4/#cia-triad
 #
 secret		/etc/openvpn/secret.obfs4.key 1
+
+# This is to override the default insecure cipher in openvpn
+# Use 'openvpn --show-ciphers' to see the list of all available ciphers
+cipher          AES-256-CBC
+
